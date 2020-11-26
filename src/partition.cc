@@ -3,7 +3,9 @@
 #include <parmetis.h>
 #include <partition.h>
 
+#include <iostream>
 #include <memory>
+#include <string>
 
 void MetisAssignment(int64_t num_partition, std::string input_filename,
                      std::string output_filename, size_t mpi_com_handle) {
@@ -16,6 +18,8 @@ void MetisAssignment(int64_t num_partition, std::string input_filename,
   int mpi_size, rank;
   MPI_Comm_size(*mpi_con, &mpi_size);
   MPI_Comm_rank(*mpi_con, &rank);
+  // mpi_size = 2;
+  // rank     = 1;
 
   uint64_t magicNum;
   size_t indptr_start_pos, indcies_start_pos, vwgt_start_pos;
@@ -42,19 +46,20 @@ void MetisAssignment(int64_t num_partition, std::string input_filename,
   }
   size_t num_indptr = vtxdist[rank + 1] - vtxdist[rank];
   indptr.resize(num_indptr + 1);
-  fs->Seek(indptr_start_pos + vtxdist[rank] * sizeof(int64_t));
+  fs->Seek(indptr_start_pos + sizeof(int64_t) +
+           vtxdist[rank] * sizeof(int64_t));
   fs->ReadArray(&indptr[0], num_indptr + 1);
   size_t num_indices = indptr[indptr.size() - 1] - indptr[0];
-  fs->Seek(indcies_start_pos + num_indices * sizeof(int64_t));
+  fs->Seek(indcies_start_pos + sizeof(int64_t) + indptr[0] * sizeof(int64_t));
   indices.resize(num_indices);
   fs->ReadArray(&indices[0], num_indices);
-  for (size_t i = 1; i < indptr.size(); i++) {
-    indptr[i] = indptr[i] - indptr[0];
+  int64_t relabel_base = indptr[0];
+  for (size_t i = 0; i < indptr.size(); i++) {
+    indptr[i] = indptr[i] - relabel_base;
   }
-
   idx_t nvtxs      = num_vertexs;
   idx_t ncon       = 1;  // # balacing constraints.
-  idx_t *xadj      = &indptr[1];
+  idx_t *xadj      = &indptr[0];
   idx_t *adjncy    = &indices[0];
   idx_t nparts     = num_partition;
   idx_t objval     = 0;
@@ -71,7 +76,7 @@ void MetisAssignment(int64_t num_partition, std::string input_filename,
   idx_t options[3] = {0, 0, 0};
   std::vector<real_t> tpwgts;
   tpwgts.resize(ncon * nparts);
-  std::fill(tpwgts.begin(), tpwgts.end(), 1.0f / (ncon * nparts));
+  std::fill(tpwgts.begin(), tpwgts.end(), 1.0f / (nparts));
   std::vector<real_t> ubvec;
   ubvec.resize(ncon);
   std::fill(ubvec.begin(), ubvec.end(), 1.05f);
@@ -92,7 +97,7 @@ void MetisAssignment(int64_t num_partition, std::string input_filename,
     part,         // partition output
     mpi_con);
 
-  auto out_fs = std::unique_ptr<dmlc::Stream>(
-    dmlc::Stream::Create(output_filename.c_str(), "w"));
+  auto out_fs = std::unique_ptr<dmlc::Stream>(dmlc::Stream::Create(
+    (output_filename + std::to_string(rank)).c_str(), "w"));
   out_fs->Write(part_arr);
 }

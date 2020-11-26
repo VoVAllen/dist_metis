@@ -39,5 +39,5 @@ add_subdirectory("third_party/dmlc-core")
 
 
 include_directories("include")
-pybind11_add_module(pymetis MODULE src/api.cc src/partition.cc )
+pybind11_add_module(pymetis MODULE src/api.cc src/partition.cc src/read_num_nodes.cc)
 target_link_libraries(pymetis PRIVATE dmlc parmetis)

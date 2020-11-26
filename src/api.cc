@@ -9,4 +9,6 @@ PYBIND11_MODULE(pymetis, m) {
 
   m.def("metis_assignment", &MetisAssignment,
         "A function to generate metis assignment");
+  m.def("num_nodes", &NumNodes, "A function to read number of nodes");
+  m.def("merge_results", &MergePartArr, "A function to merge results from MPI");
 }
