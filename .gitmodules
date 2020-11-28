@@ -4,3 +4,6 @@
 [submodule "third_party/dmlc-core"]
 	path = third_party/dmlc-core
 	url = https://github.com/dmlc/dmlc-core.git
+[submodule "third_party/ParMETIS"]
+	path = third_party/ParMETIS
+	url = https://github.com/KarypisLab/ParMETIS.git
