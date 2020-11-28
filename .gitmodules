@@ -7,3 +7,9 @@
 [submodule "third_party/ParMETIS"]
 	path = third_party/ParMETIS
 	url = https://github.com/KarypisLab/ParMETIS.git
+[submodule "third_party/GKlib"]
+	path = third_party/GKlib
+	url = https://github.com/KarypisLab/GKlib.git
+[submodule "third_party/METIS"]
+	path = third_party/METIS
+	url = https://github.com/KarypisLab/METIS.git
